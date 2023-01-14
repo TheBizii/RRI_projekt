@@ -23,8 +23,11 @@ import com.mygdx.game.utils.Geolocation;
 import com.mygdx.game.utils.MapRasterTiles;
 import com.mygdx.game.utils.PixelPosition;
 import com.mygdx.game.utils.ZoomXY;
+import com.mygdx.game.utils.map.Road;
+import com.mygdx.game.utils.map.geometry.Line;
 
 import java.io.IOException;
+import java.util.ArrayList;
 
 public class ProjectTest extends ApplicationAdapter implements GestureDetector.GestureListener {
 
@@ -44,6 +47,8 @@ public class ProjectTest extends ApplicationAdapter implements GestureDetector.G
     private final Geolocation MARKER_GEOLOCATION = new Geolocation(46.559070, 15.638100);
     private final int WIDTH = MapRasterTiles.TILE_SIZE * NUM_TILES;
     private final int HEIGHT = MapRasterTiles.TILE_SIZE * NUM_TILES;
+
+    private ArrayList<Road> roads;
 
     @Override
     public void create() {
@@ -85,6 +90,9 @@ public class ProjectTest extends ApplicationAdapter implements GestureDetector.G
         }
         layers.add(layer);
 
+        roads = Road.retrieveRoadsFromDatabase();
+        System.out.println(roads.size());
+
         tiledMapRenderer = new OrthogonalTiledMapRenderer(tiledMap);
     }
 
@@ -100,6 +108,22 @@ public class ProjectTest extends ApplicationAdapter implements GestureDetector.G
         tiledMapRenderer.render();
 
         drawMarkers();
+        drawRoads(roads);
+    }
+
+    private void drawRoads(ArrayList<Road> roads) {
+        for (Road road : roads) {
+            for (Line line : road.getGeometry()) {
+                PixelPosition fromMarker = MapRasterTiles.getPixelPosition(line.getFrom().lat, line.getFrom().lng, MapRasterTiles.TILE_SIZE, ZOOM, beginTile.x, beginTile.y, HEIGHT);
+                PixelPosition toMarker = MapRasterTiles.getPixelPosition(line.getTo().lat, line.getTo().lng, MapRasterTiles.TILE_SIZE, ZOOM, beginTile.x, beginTile.y, HEIGHT);
+
+                shapeRenderer.setProjectionMatrix(camera.combined);
+                shapeRenderer.setColor(line.getColor());
+                shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
+                shapeRenderer.rectLine(fromMarker.x, fromMarker.y, toMarker.x, toMarker.y, 5);
+                shapeRenderer.end();
+            }
+        }
     }
 
     private void drawMarkers() {
