@@ -4,13 +4,24 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.files.FileHandle;
 import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.graphics.Texture;
+import com.google.gson.Gson;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 import com.mygdx.game.secrets.Secrets;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.HttpURLConnection;
 import java.net.URL;
+<<<<<<< HEAD
 import java.util.HashSet;
+=======
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.Scanner;
+>>>>>>> 4202dfb (Fetching nearby street names and cleaning up file)
 import java.util.Set;
 
 public class MapRasterTiles {
@@ -122,7 +133,39 @@ public class MapRasterTiles {
     public static Set<String> fetchNearbyStreetNames(double lat, double lng) throws IOException {
         Set<String> streetNames = new HashSet<>();
 
+<<<<<<< HEAD
         // TODO: Call an API from mapbox.
+=======
+        String ur = mapServiceUrl + "mapbox.mapbox-streets-v8/tilequery/" + lng + "," + lat + ".json?radius=25&limit=5&dedupe&layers=road" + token.replace("?", "&");
+        System.out.println(ur);
+        URL url = new URL(ur);
+        HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+        conn.setRequestMethod("GET");
+        conn.connect();
+        int responsecode = conn.getResponseCode();
+        if (responsecode != 200) {
+            throw new RuntimeException("HttpResponseCode: " + responsecode);
+        } else {
+            StringBuilder response = new StringBuilder();
+            Scanner scanner = new Scanner(url.openStream());
+            while (scanner.hasNext()) {
+                response.append(scanner.nextLine());
+            }
+            scanner.close();
+
+            JsonObject jsonObject = new Gson().fromJson(response.toString(), JsonObject.class);
+            JsonArray features = jsonObject.getAsJsonArray("features");
+            for (JsonElement feature : features) {
+                JsonObject featureObj = feature.getAsJsonObject();
+                JsonObject properties = featureObj.getAsJsonObject("properties");
+                JsonElement nameElement = properties.get("name");
+                if(nameElement == null) continue;
+
+                String name = nameElement.getAsString();
+                streetNames.add(name);
+            }
+        }
+>>>>>>> 4202dfb (Fetching nearby street names and cleaning up file)
 
         return streetNames;
     }
