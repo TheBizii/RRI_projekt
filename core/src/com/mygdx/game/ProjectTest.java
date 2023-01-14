@@ -25,6 +25,7 @@ import com.mygdx.game.utils.Geolocation;
 import com.mygdx.game.utils.MapRasterTiles;
 import com.mygdx.game.utils.PixelPosition;
 import com.mygdx.game.utils.ZoomXY;
+import com.mygdx.game.utils.database.MongoDBConnection;
 
 import java.io.IOException;
 
@@ -88,6 +89,9 @@ public class ProjectTest extends ApplicationAdapter implements GestureDetector.G
         layers.add(layer);
 
         tiledMapRenderer = new OrthogonalTiledMapRenderer(tiledMap);
+
+        MongoDBConnection database = new MongoDBConnection();
+        database.disconnect();
     }
 
     @Override
