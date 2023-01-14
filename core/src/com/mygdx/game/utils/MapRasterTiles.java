@@ -10,6 +10,8 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
+import java.util.HashSet;
+import java.util.Set;
 
 public class MapRasterTiles {
     static String mapServiceUrl = "https://api.mapbox.com/v4/";
@@ -115,6 +117,14 @@ public class MapRasterTiles {
             bis.write(bytebuff, 0, n);
         }
         return bis;
+    }
+
+    public static Set<String> fetchNearbyStreetNames(double lat, double lng) throws IOException {
+        Set<String> streetNames = new HashSet<>();
+
+        // TODO: Call an API from mapbox.
+
+        return streetNames;
     }
 
     /**

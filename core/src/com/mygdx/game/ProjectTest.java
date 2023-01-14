@@ -6,6 +6,9 @@ import com.badlogic.gdx.Input;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.BitmapFont;
+import com.badlogic.gdx.graphics.g2d.GlyphLayout;
+import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.input.GestureDetector;
@@ -28,6 +31,7 @@ import com.mygdx.game.utils.map.geometry.Line;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Set;
 
 public class ProjectTest extends ApplicationAdapter implements GestureDetector.GestureListener {
 
@@ -37,22 +41,28 @@ public class ProjectTest extends ApplicationAdapter implements GestureDetector.G
     private TiledMap tiledMap;
     private TiledMapRenderer tiledMapRenderer;
     private OrthographicCamera camera;
+    private SpriteBatch batch;
+    private BitmapFont font;
 
     private Texture[] mapTiles;
     private ZoomXY beginTile;   // top left tile
 
-    private final int NUM_TILES = 3;
+    private final int NUM_TILES = 4;
     private final int ZOOM = 15;
     private final Geolocation CENTER_GEOLOCATION = new Geolocation(46.557314, 15.637771);
-    private final Geolocation MARKER_GEOLOCATION = new Geolocation(46.559070, 15.638100);
     private final int WIDTH = MapRasterTiles.TILE_SIZE * NUM_TILES;
     private final int HEIGHT = MapRasterTiles.TILE_SIZE * NUM_TILES;
 
     private ArrayList<Road> roads;
+    private Geolocation selectedLocation = null;
+    private Set<String> streetNames;
+    private double latOffset, lngOffset;
 
     @Override
     public void create() {
         shapeRenderer = new ShapeRenderer();
+        batch = new SpriteBatch();
+        font = new BitmapFont(Gdx.files.internal("fonts/simple32.fnt"));
 
         camera = new OrthographicCamera();
         camera.setToOrtho(false, WIDTH, HEIGHT);
@@ -71,6 +81,10 @@ public class ProjectTest extends ApplicationAdapter implements GestureDetector.G
             mapTiles = MapRasterTiles.getRasterTileZone(centerTile, NUM_TILES);
             //you need the beginning tile (tile on the top left corner) to convert geolocation to a location in pixels.
             beginTile = new ZoomXY(ZOOM, centerTile.x - ((NUM_TILES - 1) / 2), centerTile.y - ((NUM_TILES - 1) / 2));
+            latOffset = Math.abs(MapRasterTiles.tile2lat(beginTile.y, ZOOM) - MapRasterTiles.tile2lat(beginTile.y + 1, ZOOM));
+            lngOffset = Math.abs(MapRasterTiles.tile2long(beginTile.x, ZOOM) - MapRasterTiles.tile2long(beginTile.x + 1, ZOOM));
+            latOffset /= MapRasterTiles.TILE_SIZE;
+            lngOffset /= MapRasterTiles.TILE_SIZE;
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -106,8 +120,40 @@ public class ProjectTest extends ApplicationAdapter implements GestureDetector.G
         tiledMapRenderer.setView(camera);
         tiledMapRenderer.render();
 
-        drawMarkers();
         drawRoads(roads);
+        if (selectedLocation != null) {
+            drawMarkers();
+        }
+    }
+
+    private void drawMarkers() {
+        PixelPosition marker = MapRasterTiles.getPixelPosition(selectedLocation.lat, selectedLocation.lng, MapRasterTiles.TILE_SIZE, ZOOM, beginTile.x, beginTile.y, HEIGHT);
+
+        GlyphLayout layout = new GlyphLayout();
+        String coordText = "Lat: " + String.format("%.5f", selectedLocation.lat) + ", long: " + String.format("%.5f", selectedLocation.lng);
+        layout.setText(font, coordText);
+        float height = layout.height;
+
+        shapeRenderer.setProjectionMatrix(camera.combined);
+        shapeRenderer.setColor(Color.YELLOW);
+        shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
+        shapeRenderer.circle(marker.x, marker.y, 20);
+        shapeRenderer.setColor(Color.DARK_GRAY);
+        shapeRenderer.rect(0, HEIGHT - height * 3 - 30, layout.width + 30, height * 3 + 30);
+        shapeRenderer.end();
+
+        batch.setProjectionMatrix(camera.combined);
+        font.setColor(Color.WHITE);
+        font.getData().setScale(3);
+        batch.begin();
+        font.draw(batch, coordText, 15, HEIGHT - 15);
+        font.draw(batch, "Near:", 15, HEIGHT - height * 1 - 15);
+        if(streetNames.iterator().hasNext()) {
+            font.draw(batch, streetNames.iterator().next(), 15, HEIGHT - height * 2 - 15);
+        } else {
+            font.draw(batch, "Unknown street name", 15, HEIGHT - height * 2 - 15);
+        }
+        batch.end();
     }
 
     private void drawRoads(ArrayList<Road> roads) {
@@ -125,16 +171,6 @@ public class ProjectTest extends ApplicationAdapter implements GestureDetector.G
         }
     }
 
-    private void drawMarkers() {
-        PixelPosition marker = MapRasterTiles.getPixelPosition(MARKER_GEOLOCATION.lat, MARKER_GEOLOCATION.lng, MapRasterTiles.TILE_SIZE, ZOOM, beginTile.x, beginTile.y, HEIGHT);
-
-        shapeRenderer.setProjectionMatrix(camera.combined);
-        shapeRenderer.setColor(Color.RED);
-        shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
-        shapeRenderer.circle(marker.x, marker.y, 10);
-        shapeRenderer.end();
-    }
-
     @Override
     public void dispose() {
         shapeRenderer.dispose();
@@ -144,6 +180,21 @@ public class ProjectTest extends ApplicationAdapter implements GestureDetector.G
     public boolean touchDown(float x, float y, int pointer, int button) {
         touchPosition.set(x, y, 0);
         camera.unproject(touchPosition);
+
+        int tileX = beginTile.x + (int) (touchPosition.x / MapRasterTiles.TILE_SIZE);
+        int tileY = beginTile.y + (int) ((HEIGHT - touchPosition.y) / MapRasterTiles.TILE_SIZE);
+
+        double clickedLat = MapRasterTiles.tile2lat(tileY, ZOOM);
+        double clickedLng = MapRasterTiles.tile2long(tileX, ZOOM);
+        // Also calculate offsets.
+        clickedLat -= latOffset * ((HEIGHT - touchPosition.y) % MapRasterTiles.TILE_SIZE);
+        clickedLng += lngOffset * (touchPosition.x % MapRasterTiles.TILE_SIZE);
+
+        selectedLocation = new Geolocation(clickedLat, clickedLng);
+        try {
+            streetNames = MapRasterTiles.fetchNearbyStreetNames(clickedLat, clickedLng);
+        } catch (IOException ex) {}
+
         return false;
     }
 
