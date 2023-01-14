@@ -6,8 +6,6 @@ import com.badlogic.gdx.Input;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
-import com.badlogic.gdx.graphics.g2d.BitmapFont;
-import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.input.GestureDetector;
@@ -25,7 +23,6 @@ import com.mygdx.game.utils.Geolocation;
 import com.mygdx.game.utils.MapRasterTiles;
 import com.mygdx.game.utils.PixelPosition;
 import com.mygdx.game.utils.ZoomXY;
-import com.mygdx.game.utils.database.MongoDBConnection;
 
 import java.io.IOException;
 
@@ -89,9 +86,6 @@ public class ProjectTest extends ApplicationAdapter implements GestureDetector.G
         layers.add(layer);
 
         tiledMapRenderer = new OrthogonalTiledMapRenderer(tiledMap);
-
-        MongoDBConnection database = new MongoDBConnection();
-        database.disconnect();
     }
 
     @Override

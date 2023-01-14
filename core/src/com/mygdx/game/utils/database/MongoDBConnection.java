@@ -2,16 +2,16 @@ package com.mygdx.game.utils.database;
 
 import com.mongodb.ConnectionString;
 import com.mongodb.MongoClientSettings;
-import com.mongodb.reactivestreams.client.MongoClient;
-import com.mongodb.reactivestreams.client.MongoClients;
-import com.mongodb.reactivestreams.client.MongoDatabase;
+import com.mongodb.client.MongoClient;
+import com.mongodb.client.MongoClients;
+import com.mongodb.client.MongoDatabase;
 import com.mygdx.game.secrets.Secrets;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 
 public class MongoDBConnection {
-    private ConnectionString connString;
+    private final ConnectionString connString;
     private MongoClient client;
     private MongoDatabase database;
 
@@ -38,9 +38,13 @@ public class MongoDBConnection {
                 .retryWrites(true)
                 .build();
         client = MongoClients.create(settings);
-        database = client.getDatabase("test");
+        database = client.getDatabase(Secrets.MONGODB_DATABASE);
 
         System.out.println("Connected to MongoDB!");
+    }
+
+    public MongoDatabase getDatabase() {
+        return database;
     }
 
     public void disconnect() {

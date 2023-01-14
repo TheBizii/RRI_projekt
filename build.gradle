@@ -10,8 +10,6 @@ buildscript {
     }
     dependencies {
         classpath 'com.android.tools.build:gradle:7.0.4'
-        
-
     }
 }
 
@@ -95,7 +93,8 @@ project(":core") {
 
 
     dependencies {
-        api 'org.mongodb:mongodb-driver-reactivestreams:4.8.0'
+        api 'org.mongodb:mongodb-driver-sync:4.8.0'
+        api 'org.mongodb:mongodb-driver-core:4.8.0'
         api "com.badlogicgames.gdx:gdx:$gdxVersion"
         api "com.badlogicgames.gdx:gdx-freetype:$gdxVersion"
         api "com.badlogicgames.gdx:gdx-box2d:$gdxVersion"
@@ -104,6 +103,5 @@ project(":core") {
         api "com.badlogicgames.ashley:ashley:$ashleyVersion"
         api "com.badlogicgames.gdx:gdx-ai:$aiVersion"
         api "com.badlogicgames.gdx-controllers:gdx-controllers-core:$gdxControllersVersion"
-        
     }
 }
