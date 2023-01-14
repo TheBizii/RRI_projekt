@@ -91,7 +91,6 @@ public class ProjectTest extends ApplicationAdapter implements GestureDetector.G
         layers.add(layer);
 
         roads = Road.retrieveRoadsFromDatabase();
-        System.out.println(roads.size());
 
         tiledMapRenderer = new OrthogonalTiledMapRenderer(tiledMap);
     }

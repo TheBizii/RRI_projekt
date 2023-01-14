@@ -1,5 +1,7 @@
 package com.mygdx.game.utils;
 
+import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.files.FileHandle;
 import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.graphics.Texture;
 import com.mygdx.game.secrets.Secrets;
@@ -10,19 +12,10 @@ import java.io.InputStream;
 import java.net.URL;
 
 public class MapRasterTiles {
-    //Mapbox
-    //https://docs.mapbox.com/api/maps/raster-tiles/
     static String mapServiceUrl = "https://api.mapbox.com/v4/";
     static String token = "?access_token=" + Secrets.MAPBOX_KEY;
     static String tilesetId = "mapbox.satellite";
     static String format = "@2x.jpg90";
-
-    //Geoapify
-    //https://www.geoapify.com/get-started-with-maps-api
-    /*static String mapServiceUrl = "https://maps.geoapify.com/v1/tile/";
-    static String token = "?&apiKey=" + Keys.GEOAPIFY;
-    static String tilesetId = "dark-matter-purple-roads";
-    static String format = "@2x.png";*/
 
     //@2x in format means it returns higher DPI version of the image and the image size is 512px (otherwise it is 256px)
     final static public int TILE_SIZE = 512;
@@ -37,8 +30,16 @@ public class MapRasterTiles {
      * @throws IOException
      */
     public static Texture getRasterTile(int zoom, int x, int y) throws IOException {
+        String fileName = tilesetId.replace(".", "_") + "_" + zoom + "_" + x + "_" + y + format.replace("@", "_").replace(".", "_") + ".jpg";
+        FileHandle handle = Gdx.files.external("saved_tiles/" + fileName);
+
+        if(handle.exists()) {
+            return getTexture(handle.readBytes());
+        }
+
         URL url = new URL(mapServiceUrl + tilesetId + "/" + zoom + "/" + x + "/" + y + format + token);
         ByteArrayOutputStream bis = fetchTile(url);
+        handle.writeBytes(bis.toByteArray(), false);
         return getTexture(bis.toByteArray());
     }
 
