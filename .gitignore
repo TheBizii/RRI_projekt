@@ -1,5 +1,5 @@
 ## PP_MKTBAG .gitignore
-/secrets
+/core/src/com/mygdx/game/secrets/
 
 ## Java
 
@@ -115,4 +115,3 @@ Thumbs.db
 /ios/xcode/native/
 /ios/IOSLauncher.app
 /ios/IOSLauncher.app.dSYM
-/core/src/com/mygdx/game/secrets/
