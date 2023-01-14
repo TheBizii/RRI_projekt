@@ -1,3 +1,6 @@
+## PP_MKTBAG .gitignore
+/secrets
+
 ## Java
 
 *.class
